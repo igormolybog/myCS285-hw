@@ -53,7 +53,7 @@ class MLPPolicy(BasePolicy):
         raise NotImplementedError
 
     def define_forward_pass(self):
-        # TODO implement this build_mlp function in tf_utils
+        # DONE implement this build_mlp function in tf_utils
         mean = build_mlp(self.observations_pl, output_size=self.ac_dim, scope='continuous_logits', n_layers=self.n_layers, size=self.size)
         logstd = tf.Variable(tf.zeros(self.ac_dim), name='logstd')
         self.parameters = (mean, logstd)
@@ -83,11 +83,11 @@ class MLPPolicy(BasePolicy):
         else:
             observation = obs[None]
 
-        # TODO return the action that the policy prescribes
+        # DONE return the action that the policy prescribes
         # HINT1: you will need to call self.sess.run
         # HINT2: the tensor we're interested in evaluating is self.sample_ac
         # HINT3: in order to run self.sample_ac, it will need observation fed into the feed_dict
-        return TODO
+        return self.sess.run(self.sample_ac, feed_dict={self.observations_pl: observation})
 
     # update/train this policy
     def update(self, observations, actions):
@@ -118,13 +118,12 @@ class MLPPolicySL(MLPPolicy):
         true_actions = self.acs_labels_na
         predicted_actions = self.sample_ac
 
-        # TODO define the loss that will be used to train this policy
+        # DONE define the loss that will be used to train this policy
         # HINT1: remember that we are doing supervised learning
         # HINT2: use tf.losses.mean_squared_error
-        self.loss = TODO
+        self.loss = tf.losses.mean_squared_error(labels=true_actions, predictions=predicted_actions)
         self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
 
     def update(self, observations, actions):
         assert(self.training, 'Policy must be created with training=True in order to perform training updates...')
         self.sess.run(self.train_op, feed_dict={self.observations_pl: observations, self.acs_labels_na: actions})
-
