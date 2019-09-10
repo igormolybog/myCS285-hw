@@ -32,7 +32,7 @@ class BCAgent(BaseAgent):
     def train(self, ob_no, ac_na, re_n, next_ob_no, terminal_n):
         # training a BC agent refers to updating its actor using
         # the given observations and corresponding action labels
-        self.actor.update(ob_no, ac_na) ## DONE: look in here and implement this
+        return self.actor.update(ob_no, ac_na) ## DONE: look in here and implement this
 
     def add_to_replay_buffer(self, paths):
         self.replay_buffer.add_rollouts(paths)

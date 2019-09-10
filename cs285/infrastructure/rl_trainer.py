@@ -187,6 +187,7 @@ class RL_Trainer(object):
 
     def train_agent(self):
         print('\nTraining agent using sampled data from replay buffer...')
+        loss_log = [None]*self.params['num_agent_train_steps_per_iter']
         for train_step in range(self.params['num_agent_train_steps_per_iter']):
 
             # DONE sample some data from the data buffer
@@ -198,7 +199,9 @@ class RL_Trainer(object):
             # HINT: use the agent's train function
             # HINT: print or plot the loss for debugging!
             current_loss = self.agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
-            print("step: {}; loss: {}".format(train_step, current_loss))
+            loss_log[train_step] = current_loss
+            # print("step: {}; loss: {}".format(train_step, current_loss))
+            return loss_log
 
     def do_relabel_with_expert(self, expert_policy, paths):
         print("\nRelabelling collected observations with labels from an expert policy...")
