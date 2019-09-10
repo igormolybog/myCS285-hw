@@ -18,7 +18,7 @@ add the following to bottom of your bashrc:
 export LD_LIBRARY_PATH=~/.mujoco/mjpro150/bin/
 
 NOTE IF YOU'RE USING A MAC:
-The provided mjpro150 folder is for Linux. 
+The provided mjpro150 folder is for Linux.
 Please download the OSX version yourself, from https://www.roboti.us/index.html
 
 ##############################################
@@ -46,6 +46,12 @@ $ source activate cs285_env
 
 iv) install the requirements into this conda env
 $ pip install --user --requirement requirements.txt
+
+iv.a) ERROR: GL/osmesa.h: No such file or directory
+      SOLUTION: sudo apt-get install libosmesa6-dev
+
+iv.b) ERROR: collect2: error: ld returned 1 exit status
+      SOLUTION: sudo apt install libgl1-mesa-dev
 
 v) allow your code to be able to see 'cs285'
 $ cd <path_to_hw>
@@ -80,7 +86,7 @@ See the code + the hw pdf for more details.
 ##############################################
 ##############################################
 
-5) run code: 
+5) run code:
 
 Run the following command for Section 1 (Behavior Cloning):
 
