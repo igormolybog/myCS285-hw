@@ -198,7 +198,7 @@ class RL_Trainer(object):
             # HINT: use the agent's train function
             # HINT: print or plot the loss for debugging!
             current_loss = self.agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
-            print(f"step: {train_step}; loss: {current_loss}")
+            print("step: {}; loss: {}".format(train_step, current_loss))
 
     def do_relabel_with_expert(self, expert_policy, paths):
         print("\nRelabelling collected observations with labels from an expert policy...")
@@ -207,7 +207,7 @@ class RL_Trainer(object):
         # HINT: query the policy (using the get_action function) with paths[i]["observation"]
         # and replace paths[i]["action"] with these expert labels
         for path in paths:
-            for i, observation in enumerate(path["observation"])
+            for i, observation in enumerate(path["observation"]):
                 path["action"][i] = expert_policy.get_action(observation)
 
         # paths is already modified
