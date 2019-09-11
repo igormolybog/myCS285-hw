@@ -123,14 +123,15 @@ class RL_Trainer(object):
             self.agent.add_to_replay_buffer(paths)
 
             # train agent (using sampled data from replay buffer)
-            self.train_agent() ## DONE implement this function below
+            loss_log = self.train_agent() ## DONE implement this function below
+
 
             # log/save
             if self.log_video or self.log_metrics:
 
                 # perform logging
                 print('\nBeginning logging procedure...')
-                self.perform_logging(itr, paths, eval_policy, train_video_paths)
+                self.perform_logging(itr, paths, loss_log, eval_policy, train_video_paths)
 
                 # save policy
                 print('\nSaving agent\'s actor...')
@@ -201,7 +202,7 @@ class RL_Trainer(object):
             current_loss = self.agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             loss_log[train_step] = current_loss
             # print("step: {}; loss: {}".format(train_step, current_loss))
-            return loss_log
+        return loss_log
 
     def do_relabel_with_expert(self, expert_policy, paths):
         print("\nRelabelling collected observations with labels from an expert policy...")
@@ -219,7 +220,7 @@ class RL_Trainer(object):
     ####################################
     ####################################
 
-    def perform_logging(self, itr, paths, eval_policy, train_video_paths):
+    def perform_logging(self, itr, paths, loss_log, eval_policy, train_video_paths):
 
         # collect eval trajectories, for logging
         print("\nCollecting data for eval...")
@@ -274,5 +275,11 @@ class RL_Trainer(object):
                 print('{} : {}'.format(key, value))
                 self.logger.log_scalar(value, key, itr)
             print('Done logging...\n\n')
+
+
+            # logging loss_log
+            for step, loss in enumerate(loss_log):
+                self.logger.log_scalars({'loss':loss}, "train_loss", step, str(itr))
+
 
             self.logger.flush()
