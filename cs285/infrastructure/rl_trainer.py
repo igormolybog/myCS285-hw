@@ -274,12 +274,14 @@ class RL_Trainer(object):
             for key, value in logs.items():
                 print('{} : {}'.format(key, value))
                 self.logger.log_scalar(value, key, itr)
+            # logging loss_log
+            # print('start_loss : {}'.format(loss_log[0]))
+            # print('result_loss : {}'.format(loss_log[-1]))
+            # for step, loss in enumerate(loss_log):
+            #     self.logger.log_scalars({'loss':loss}, "train_loss", step, str(itr))
             print('Done logging...\n\n')
 
 
-            # logging loss_log
-            for step, loss in enumerate(loss_log):
-                self.logger.log_scalars({'loss':loss}, "train_loss", step, str(itr))
 
 
             self.logger.flush()
