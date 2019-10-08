@@ -158,10 +158,11 @@ class RL_Trainer(object):
                 # load the data. In this case you can directly return as follows
                 # ``` return loaded_paths, 0, None ```
 
-        if itr == 0:
-            with open(load_initial_expertdata, 'rb') as expertdata:
-                all_paths = pickle.load(expertdata)
-                return all_paths, 0, None
+        # From HW1
+        # if itr == 0:
+        #     with open(load_initial_expertdata, 'rb') as expertdata:
+        #         all_paths = pickle.load(expertdata)
+        #         return all_paths, 0, None
 
                 # collect data, batch_size is the number of transitions you want to collect.
 
