@@ -482,4 +482,3 @@ class MemoryOptimizedReplayBuffer(object):
         self.action[idx] = action
         self.reward[idx] = reward
         self.done[idx]   = done
-

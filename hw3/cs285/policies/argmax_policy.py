@@ -19,4 +19,4 @@ class ArgMaxPolicy(object):
             observation = obs
         else:
             observation = obs[None]
-        return self.sess.run(self.critic.q_t_values, feed_dict={self.critic.obs_t_ph: observation}) # DONE
+        return self.sess.run(self.action, feed_dict={self.critic.obs_t_ph: observation}) # DONE

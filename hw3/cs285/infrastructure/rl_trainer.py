@@ -16,6 +16,8 @@ from cs285.infrastructure.logger import Logger
 from cs285.agents.dqn_agent import DQNAgent
 from cs285.infrastructure.dqn_utils import get_wrapper_by_name
 
+from tqdm import tqdm
+
 # how many rollouts to save as videos to tensorboard
 MAX_NVIDEO = 2
 MAX_VIDEO_LEN = 40 # we overwrite this in the code below
@@ -111,7 +113,7 @@ class RL_Trainer(object):
         self.total_envsteps = 0
         self.start_time = time.time()
 
-        for itr in range(n_iter):
+        for itr in tqdm(range(n_iter)):
             #print("\n\n********** Iteration %i ************"%itr)
 
             # decide if videos should be rendered/logged at this iteration
@@ -188,10 +190,10 @@ class RL_Trainer(object):
                 # load the data. In this case you can directly return as follows
                 # ``` return loaded_paths, 0, None ```
 
-        if itr == 0:
-            with open(load_initial_expertdata, 'rb') as expertdata:
-                all_paths = pickle.load(expertdata)
-                return all_paths, 0, None
+        # if itr == 0:
+        #     with open(load_initial_expertdata, 'rb') as expertdata:
+        #         all_paths = pickle.load(expertdata)
+        #         return all_paths, 0, None
 
                 # collect data, batch_size is the number of transitions you want to collect.
 
@@ -218,7 +220,7 @@ class RL_Trainer(object):
 
     def train_agent(self):
         # DONE: GETTHIS from HW1
-        print('\nTraining agent using sampled data from replay buffer...')
+        # print('\nTraining agent using sampled data from replay buffer...')
         loss_log = [None]*self.params['num_agent_train_steps_per_iter']
         for train_step in range(self.params['num_agent_train_steps_per_iter']):
 

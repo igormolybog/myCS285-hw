@@ -133,7 +133,7 @@ class DQNAgent(object):
             # DONE: use sess.run to periodically update the critic's target function
             # HINT: see update_target_fn
             if self.num_param_updates % self.target_update_freq == 0:
-                self.sess.run(self.update_target_fn) # DONE
+                self.sess.run(self.critic.update_target_fn) # DONE
 
             self.num_param_updates += 1
 
