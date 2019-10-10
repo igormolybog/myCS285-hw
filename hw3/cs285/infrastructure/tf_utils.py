@@ -62,3 +62,18 @@ def lrelu(x, leak=0.2):
     f1 = 0.5 * (1 + leak)
     f2 = 0.5 * (1 - leak)
     return f1 * x + f2 * abs(x)
+
+from sys import stdout
+
+def watched(self, tensors_gen=lambda x: [x],
+                    string_gen = lambda x: "WATCH: "+str(x.name)+": ",
+                    output_stream=stdout):
+    """
+        extra_processor(t: tf.Tensor, s: stream) -> tf.operation
+        is a function that must return a print operation
+    """
+    print_op = tf.print(string_gen(self), *tensors_gen(self), output_stream=output_stream)
+    return tf.tuple([self], control_inputs=[print_op])[0]
+
+def tf_debug():
+    tf.Tensor.watched = watched

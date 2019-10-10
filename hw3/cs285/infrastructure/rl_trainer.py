@@ -10,7 +10,7 @@ import sys
 from gym import wrappers
 
 from cs285.infrastructure.utils import *
-from cs285.infrastructure.tf_utils import create_tf_session
+from cs285.infrastructure.tf_utils import create_tf_session, tf_debug
 from cs285.infrastructure.logger import Logger
 
 from cs285.agents.dqn_agent import DQNAgent
@@ -35,6 +35,8 @@ class RL_Trainer(object):
         self.params = params
         self.logger = Logger(self.params['logdir'])
         self.sess = create_tf_session(self.params['use_gpu'], which_gpu=self.params['which_gpu'])
+
+        tf_debug()
 
         # Set random seeds
         seed = self.params['seed']
