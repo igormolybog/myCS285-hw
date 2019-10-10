@@ -43,7 +43,7 @@ class DQNCritic(BaseCritic):
             # is being updated, but the Q-value for this action is obtained from the
             # target Q-network. See page 5 of https://arxiv.org/pdf/1509.06461.pdf for more details.
             # DONE
-            q_tp1 = tf.reduce_sum(q_tp1_values * tf.one_hot(tf.math.argmax(q_t_values), self.ac_dim), axis=1)
+            q_tp1 = tf.reduce_sum(q_tp1_values * tf.one_hot(tf.math.argmax(self.q_t_values, axis=1), self.ac_dim), axis=1)
         else:
             # q values of the next timestep
             q_tp1 = tf.reduce_max(q_tp1_values, axis=1)

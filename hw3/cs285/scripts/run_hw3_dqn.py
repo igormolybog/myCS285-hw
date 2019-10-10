@@ -60,6 +60,8 @@ def main():
     parser.add_argument('--which_gpu', '-gpu_id', default=0)
     parser.add_argument('--scalar_log_freq', type=int, default=int(1e4))
 
+    parser.add_argument('--temperature_decay', type=float, default=-1.0)
+
     parser.add_argument('--save_params', action='store_true')
 
     args = parser.parse_args()

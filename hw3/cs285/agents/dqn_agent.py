@@ -22,6 +22,7 @@ class DQNAgent(object):
 
         self.replay_buffer_idx = None
         self.exploration = agent_params['exploration_schedule']
+        self.exploration_type = agent_params['exploration_type']
         self.optimizer_spec = agent_params['optimizer_spec']
 
         self.critic = DQNCritic(sess, agent_params, self.optimizer_spec)
@@ -51,16 +52,25 @@ class DQNAgent(object):
         # HINT: see replay buffer's function store_frame
         self.replay_buffer_idx = self.replay_buffer.store_frame(self.last_obs) # DONE
 
-        eps = self.exploration.value(self.t)
+# !!!!!!!!!!!!!!!!!!!!!!!!!!NEWCODE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        if self.exploration_type == 'boltzmann':
+            enc_last_obs = self.replay_buffer.encode_recent_observation() # DONE
+            enc_last_obs = enc_last_obs[None, :]
+            action = sample_boltzmann(self.sess.run(self.critic.q_t_values), self.exploration.value(self.t))[0]
+        else:
+# !!!!!!!!!!!!!!!!!!!!!!!!!!NEWCODE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+            eps = self.exploration.value(self.t)
         # DONE use epsilon greedy exploration when selecting action
         # HINT: take random action
             # with probability eps (see np.random.random())
             # OR if your current step number (see self.t) is less that self.learning_starts
-        perform_random_action = self.t < self.learning_starts # DONE
+            perform_random_action = self.t < self.learning_starts or np.random.random() < eps # DONE
 
-        if perform_random_action:
-            action = int(self.num_actions*np.random.random()) # DONE
-        else:
+            if perform_random_action:
+                action = int(self.num_actions*np.random.random()) # DONE
+            else:
             # DONE query the policy to select action
             # HINT: you cannot use "self.last_obs" directly as input
             # into your network, since it needs to be processed to include context
@@ -70,12 +80,12 @@ class DQNAgent(object):
             # that you pushed into the buffer and compute the corresponding
             # input that should be given to a Q network by appending some
             # previous frames.
-            enc_last_obs = self.replay_buffer.encode_recent_observation() # DONE
-            enc_last_obs = enc_last_obs[None, :]
+                enc_last_obs = self.replay_buffer.encode_recent_observation() # DONE
+                enc_last_obs = enc_last_obs[None, :]
 
             # DONE query the policy with enc_last_obs to select action
-            action = self.actor.get_action(enc_last_obs) # DONE
-            action = action[0]
+                action = self.actor.get_action(enc_last_obs) # DONE
+                action = action[0]
 
         # DONE take a step in the environment using the action from the policy
         # HINT1: remember that self.last_obs must always point to the newest/latest observation
@@ -139,3 +149,13 @@ class DQNAgent(object):
 
         self.t += 1
         return loss
+
+def sample_boltzmann(q, T=1.0):
+    '''q -- np.array with 1 or 2 dimensions (objects are raws if dim is 2)'''
+    if len(q.shape)<2:
+      q = q[None, :]
+    from numpy import exp
+    from numpy.random import choice
+    exp_q = exp(q/(T*q.sum(axis=1,keepdims=1)))
+    weights = exp_q/exp_q.sum(axis=1,keepdims=1)
+    return [choice(w.size, 1,  p=w)  for w in weights]

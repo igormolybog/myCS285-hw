@@ -12,7 +12,7 @@ from cs285.infrastructure.atari_wrappers import wrap_deepmind
 
 OptimizerSpec = namedtuple("OptimizerSpec", ["constructor", "kwargs", "lr_schedule"])
 
-def get_env_kwargs(env_name):
+def get_env_kwargs(env_name, temperature_decay):
     if env_name == 'PongNoFrameskip-v4':
         kwargs = {
             'learning_starts': 50000,
@@ -28,7 +28,14 @@ def get_env_kwargs(env_name):
             'gamma': 0.99,
         }
         kwargs['optimizer_spec'] = atari_optimizer(kwargs['num_timesteps'])
-        kwargs['exploration_schedule'] = atari_exploration_schedule(kwargs['num_timesteps'])
+        if temperature_decay <= 0:
+            kwargs['exploration_schedule'] = atari_exploration_schedule(kwargs['num_timesteps'])
+            kwargs['exploration_type'] = 'greedy'
+        elif temperature_decay <= 1:
+            kwargs['exploration_type'] = 'boltzmann'
+            kwargs['exploration_schedule'] = atari_temperature_schedule(temperature_decay)
+        else:
+            raise ValueError('temperature_decay must be less than 1, but recieved '+str(temperature_decay))
 
     elif env_name == 'LunarLander-v2':
         def lunar_empty_wrapper(env):
@@ -90,6 +97,9 @@ def atari_exploration_schedule(num_timesteps):
             (num_timesteps / 8, 0.01),
         ], outside_value=0.01
     )
+
+def atari_temperature_schedule(temperature_decay):
+    return ExponentialSchedule(temperature_decay)
 
 
 def atari_ram_exploration_schedule(num_timesteps):
@@ -241,6 +251,29 @@ class LinearSchedule(object):
         """See Schedule.value"""
         fraction  = min(float(t) / self.schedule_timesteps, 1.0)
         return self.initial_p + fraction * (self.final_p - self.initial_p)
+
+class ExponentialSchedule(object):
+    def __init__(self, temp_decay, initial_temperature = 1000.0):
+        """Linear interpolation between initial_p and final_p over
+        schedule_timesteps. After this many timesteps pass final_p is
+        returned.
+        Parameters
+        ----------
+        schedule_timesteps: int
+            Number of timesteps for which to linearly anneal initial_p
+            to final_p
+        initial_p: float
+            initial output value
+        final_p: float
+            final output value
+        """
+        self.temp_decay = temp_decay
+        self.current_temperature = initial_temperature/temp_decay
+
+    def value(self, t):
+        """See Schedule.value"""
+        self.current_temperature = self.current_temperature * temp_decay
+        return self.current_temperature
 
 def compute_exponential_averages(variables, decay):
     """Given a list of tensorflow scalar variables
