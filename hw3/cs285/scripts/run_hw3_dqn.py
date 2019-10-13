@@ -18,7 +18,7 @@ class Q_Trainer(object):
             'double_q': params['double_q'],
         }
 
-        env_args = get_env_kwargs(params['env_name'])
+        env_args = get_env_kwargs(params['env_name'], params['temperature_decay'])
 
         self.agent_params = {**train_args, **env_args, **params}
 
@@ -60,6 +60,9 @@ def main():
     parser.add_argument('--which_gpu', '-gpu_id', default=0)
     parser.add_argument('--scalar_log_freq', type=int, default=int(1e4))
 
+    # temperature_decay must be <= 1
+    # Exploration is greedy if temperature_decay <= 0,
+    # switched to boltzmann exploration otherwise
     parser.add_argument('--temperature_decay', type=float, default=-1.0)
 
     parser.add_argument('--save_params', action='store_true')

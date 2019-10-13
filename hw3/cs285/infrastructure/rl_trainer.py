@@ -212,7 +212,7 @@ class RL_Trainer(object):
         # collect more rollouts with the same policy, to be saved as videos in tensorboard
         # note: here, we collect MAX_NVIDEO rollouts, each of length MAX_VIDEO_LEN
         train_video_paths = None
-        if self.log_video:
+        if self.logvideo:
             print('\nCollecting train rollouts to be used for saving videos...')
             ## DONE look in utils and implement sample_n_trajectories
             train_video_paths = sample_n_trajectories(self.env, collect_policy, MAX_NVIDEO, MAX_VIDEO_LEN, True)
@@ -331,10 +331,10 @@ class RL_Trainer(object):
 
             logs["Train_EnvstepsSoFar"] = self.total_envsteps
             logs["TimeSinceStart"] = time.time() - self.start_time
-            if isinstance(loss, dict):
-                logs.update(loss)
+            if isinstance(loss, list):
+                for l in loss: log_loss(logs, l)
             else:
-                logs["Training loss"] = loss
+                log_loss(logs, loss)
 
             if itr == 0:
                 self.initial_return = np.mean(train_returns)
@@ -347,3 +347,9 @@ class RL_Trainer(object):
             print('Done logging...\n\n')
 
             self.logger.flush()
+
+def log_loss(logs, loss):
+    if isinstance(loss, dict):
+        logs.update(loss)
+    else:
+        logs["Training loss"] = loss

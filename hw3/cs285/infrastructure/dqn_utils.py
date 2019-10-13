@@ -29,8 +29,8 @@ def get_env_kwargs(env_name, temperature_decay):
         }
         kwargs['optimizer_spec'] = atari_optimizer(kwargs['num_timesteps'])
         if temperature_decay <= 0:
-            kwargs['exploration_schedule'] = atari_exploration_schedule(kwargs['num_timesteps'])
             kwargs['exploration_type'] = 'greedy'
+            kwargs['exploration_schedule'] = atari_exploration_schedule(kwargs['num_timesteps'])
         elif temperature_decay <= 1:
             kwargs['exploration_type'] = 'boltzmann'
             kwargs['exploration_schedule'] = atari_temperature_schedule(temperature_decay)
@@ -55,7 +55,14 @@ def get_env_kwargs(env_name, temperature_decay):
             'num_timesteps': 500000,
             'env_wrappers': lunar_empty_wrapper
         }
-        kwargs['exploration_schedule'] = lander_exploration_schedule(kwargs['num_timesteps'])
+        if temperature_decay <= 0:
+            kwargs['exploration_type'] = 'greedy'
+            kwargs['exploration_schedule'] = lander_exploration_schedule(kwargs['num_timesteps'])
+        elif temperature_decay <= 1:
+            kwargs['exploration_type'] = 'boltzmann'
+            kwargs['exploration_schedule'] = lander_temperature_schedule(temperature_decay)
+        else:
+            raise ValueError('temperature_decay must be less than 1, but recieved '+str(temperature_decay))
 
     else:
         raise NotImplementedError
@@ -145,6 +152,8 @@ def lander_exploration_schedule(num_timesteps):
         ], outside_value=0.02
     )
 
+def lander_temperature_schedule(temperature_decay):
+    return ExponentialSchedule(temperature_decay)
 
 def huber_loss(x, delta=1.0):
     # https://en.wikipedia.org/wiki/Huber_loss
@@ -253,7 +262,7 @@ class LinearSchedule(object):
         return self.initial_p + fraction * (self.final_p - self.initial_p)
 
 class ExponentialSchedule(object):
-    def __init__(self, temp_decay, initial_temperature = 1000.0):
+    def __init__(self, temp_decay, initial_temperature = 1000.0, update_freq=1000):
         """Linear interpolation between initial_p and final_p over
         schedule_timesteps. After this many timesteps pass final_p is
         returned.
@@ -268,11 +277,13 @@ class ExponentialSchedule(object):
             final output value
         """
         self.temp_decay = temp_decay
+        self.update_freq = update_freq
         self.current_temperature = initial_temperature/temp_decay
 
     def value(self, t):
         """See Schedule.value"""
-        self.current_temperature = self.current_temperature * temp_decay
+        if t%self.update_freq == 0:
+            self.current_temperature = self.current_temperature * self.temp_decay
         return self.current_temperature
 
 def compute_exponential_averages(variables, decay):

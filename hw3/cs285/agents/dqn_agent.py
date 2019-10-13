@@ -57,7 +57,9 @@ class DQNAgent(object):
         if self.exploration_type == 'boltzmann':
             enc_last_obs = self.replay_buffer.encode_recent_observation() # DONE
             enc_last_obs = enc_last_obs[None, :]
-            action = sample_boltzmann(self.sess.run(self.critic.q_t_values), self.exploration.value(self.t))[0]
+            action = sample_boltzmann(
+                        self.sess.run(self.critic.q_t_values, feed_dict={self.critic.obs_t_ph: enc_last_obs}),
+                        self.exploration.value(self.t))[0]
         else:
 # !!!!!!!!!!!!!!!!!!!!!!!!!!NEWCODE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -148,14 +150,21 @@ class DQNAgent(object):
             self.num_param_updates += 1
 
         self.t += 1
+
         return loss
 
 def sample_boltzmann(q, T=1.0):
     '''q -- np.array with 1 or 2 dimensions (objects are raws if dim is 2)'''
     if len(q.shape)<2:
       q = q[None, :]
-    from numpy import exp
+    from scipy.special import softmax
+    # from numpy import exp
     from numpy.random import choice
-    exp_q = exp(q/(T*q.sum(axis=1,keepdims=1)))
-    weights = exp_q/exp_q.sum(axis=1,keepdims=1)
-    return [choice(w.size, 1,  p=w)  for w in weights]
+    # exp_q = softmax(q/(T*np.absolute(q).sum(axis=1,keepdims=1)))
+    if T<1e-6:
+        return [np.argmax(q_raw) for q_raw in q]
+    else:
+        try:
+            return [choice(w.size, 1,  p=w)[0] for w in softmax(q/T)]
+        except ValueError as e:
+            return [np.argmax(q_raw) for q_raw in q]
