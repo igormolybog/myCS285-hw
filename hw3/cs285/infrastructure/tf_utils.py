@@ -69,7 +69,9 @@ def watched(self, tensors_gen=lambda x: [x],
                     string_gen = lambda x: "WATCH: "+str(x.name)+": ",
                     output_stream=stdout):
     """
-        extra_processor(t: tf.Tensor, s: stream) -> tf.operation
+        attaches a printing operator to the tensor self
+
+        param: extra_processor(t: tf.Tensor, s: stream) -> tf.operation
         is a function that must return a print operation
     """
     print_op = tf.print(string_gen(self), *tensors_gen(self), output_stream=output_stream)
