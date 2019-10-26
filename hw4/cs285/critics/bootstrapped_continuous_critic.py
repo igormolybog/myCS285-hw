@@ -25,7 +25,7 @@ class BootstrappedContinuousCritic(BaseCritic):
             that are computed later in the function
 
             Prefixes and suffixes:
-            ob - observation 
+            ob - observation
             ac - action
             _no - this tensor should have shape (batch self.size /n/, observation dim)
             _na - this tensor should have shape (batch self.size /n/, action dim)
@@ -35,7 +35,7 @@ class BootstrappedContinuousCritic(BaseCritic):
             is None
 
             ----------------------------------------------------------------------------------
-            loss: a function of self.sy_logprob_n and self.sy_adv_n that we will differentiate
+            loss: a function of self.sy_ob_no, self.sy_ac_na and self.sy_adv_n that we will differentiate
                 to get the policy gradient.
         """
         self.sy_ob_no, self.sy_ac_na, self.sy_adv_n = self.define_placeholders()
@@ -49,13 +49,13 @@ class BootstrappedContinuousCritic(BaseCritic):
             size=self.size))
         self.sy_target_n = tf.placeholder(shape=[None], name="critic_target", dtype=tf.float32)
 
-        # TODO: set up the critic loss
+        # DONE: set up the critic loss
         # HINT1: the critic_prediction should regress onto the targets placeholder (sy_target_n)
         # HINT2: use tf.losses.mean_squared_error
-        self.critic_loss = TODO
+        self.critic_loss = tf.losses.mean_squared_error(labels=self.sy_target_n, predictions=self.critic_prediction) # DONE
 
-        # TODO: use the AdamOptimizer to optimize the loss defined above
-        self.critic_update_op = TODO
+        # DONE: use the AdamOptimizer to optimize the loss defined above
+        self.critic_update_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.critic_loss) # DONE
 
     def define_placeholders(self):
         """
@@ -77,9 +77,9 @@ class BootstrappedContinuousCritic(BaseCritic):
         return sy_ob_no, sy_ac_na, sy_adv_n
 
     def forward(self, ob):
-        # TODO: run your critic
+        # DONE: run your critic
         # HINT: there's a neural network structure defined above with mlp layers, which serves as your 'critic'
-        return TODO
+        return self.sess.run(self.critic_prediction, feed_dict={self.sy_ob_no: ob}) # DONE
 
     def update(self, ob_no, next_ob_no, re_n, terminal_n):
         """
@@ -100,23 +100,29 @@ class BootstrappedContinuousCritic(BaseCritic):
                 loss
         """
 
-        # TODO: Implement the pseudocode below: 
+        # DONE: Implement the pseudocode below:
 
         # do the following (self.num_grad_steps_per_target_update * self.num_target_updates) times:
             # every self.num_grad_steps_per_target_update steps (which includes the first step),
-                # recompute the target values by 
+                # recompute the target values by
                     #a) calculating V(s') by querying this critic network (ie calling 'forward') with next_ob_no
                     #b) and computing the target values as r(s, a) + gamma * V(s')
                 # HINT: don't forget to use terminal_n to cut off the V(s') (ie set it to 0) when a terminal state is reached
             # every time,
                 # update this critic using the observations and targets
-                # HINT1: need to sess.run the following: 
-                    #a) critic_update_op 
+                # HINT1: need to sess.run the following:
+                    #a) critic_update_op
                     #b) critic_loss
-                # HINT2: need to populate the following (in the feed_dict): 
+                # HINT2: need to populate the following (in the feed_dict):
                     #a) sy_ob_no with ob_no
                     #b) sy_target_n with target values calculated above
-        
-        TODO
+
+        for i in range(self.num_target_updates):
+            target = re_n + self.gamma*self.forward(next_ob_no)*(1-terminal_n)
+            for j in range(self.num_grad_steps_per_target_update):
+                loss, _ = self.sess.run([self.critic_loss, self.critic_update_op],
+                                feed_dict={self.sy_ob_no: ob_no, self.sy_target_n: target})
+
+        # DONE
 
         return loss
