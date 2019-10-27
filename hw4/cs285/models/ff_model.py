@@ -110,10 +110,11 @@ class FFModel(BaseModel):
         return loss
 
     # SELF-IMPLEMENTED
-    def run_plan(self, starting_observation, planned_actions_sequence, data_statistics):
-        observation = starting_observation
+    def run_plan(self, starting_observations, planned_actions_sequence, data_statistics):
+        observations = starting_observations
         planned_obs = [None]*len(planned_actions_sequence)
         for i, action in enumerate(planned_actions_sequence):
-            observation = self.get_prediction(observation, action, data_statistics)
-            planned_obs[i] = list(observation[0])
-        return planned_obs
+            observations = self.get_prediction(observations, action, data_statistics)
+            planned_obs[i] = observations
+        import numpy as np
+        return np.array(planned_obs)

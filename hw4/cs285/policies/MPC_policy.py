@@ -48,21 +48,23 @@ class MPCPolicy(BasePolicy):
         candidate_action_sequences = self.sample_action_sequences(num_sequences=self.N, horizon=self.horizon)
 
         # a list you can use for storing the predicted reward for each candidate sequence
-        predicted_rewards_per_ens = [[None]*len(candidate_action_sequences)]*len(self.dyn_models)
+        predicted_rewards_per_ens = [None]*len(self.dyn_models)
 
         for i, model in enumerate(self.dyn_models):
             # DONE(Q2)
-
+            actions_sequence = np.swapaxes(candidate_action_sequences, 0, 1) # (N, hprizon, ac_dim) -> (hprizon, N, ac_dim)
+            observations = np.tile(obs, (self.N,1))
             # for each candidate action sequence, predict a sequence of
             # states for each dynamics model in your ensemble
-            for j, action_sequence in enumerate(candidate_action_sequences):
-                states_sequence = model.run_plan(obs, action_sequence, self.data_statistics)
+            states_sequence = model.run_plan(observations, actions_sequence, self.data_statistics)
 
             # once you have a sequence of predicted states from each model in your
             # ensemble, calculate the reward for each sequence using self.env.get_reward (See files in envs to see how to call this)
-                rewarded_states = np.vstack([np.expand_dims(obs, axis=0), np.array(states_sequence[:-1])])
-                rewards, dones = self.env.get_reward(rewarded_states, action_sequence)
-                predicted_rewards_per_ens[i][j] = sum(rewards)
+            rewarded_states = np.vstack([np.expand_dims(observations, axis = 0), np.array(states_sequence[:-1])])
+            rewards = [None]*self.horizon
+            for j in range(self.horizon):
+                rewards[j], _ = self.env.get_reward(rewarded_states[j], actions_sequence[j])
+            predicted_rewards_per_ens[i] = np.array(rewards).sum(axis=0)
 
         # calculate mean_across_ensembles(predicted rewards).
         # the matrix dimensions should change as follows: [ens,N] --> N
