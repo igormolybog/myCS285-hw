@@ -48,9 +48,9 @@ class MBAgent(BaseAgent):
             # select which datapoints to use for this model of the ensemble
             # you might find the num_data_per_env variable defined above useful
 
-            observations = ob_no[i*num_data_per_ens: (i+1)(num_data_per_ens)] # DONE(Q1)
-            actions = ac_na[i*num_data_per_ens: (i+1)(num_data_per_ens)] # DONE(Q1)
-            next_observations = next_ob_no[i*num_data_per_ens: (i+1)(num_data_per_ens)] # DONE(Q1)
+            observations = ob_no[i*num_data_per_ens: (i+1)*(num_data_per_ens)] # DONE(Q1)
+            actions = ac_na[i*num_data_per_ens: (i+1)*(num_data_per_ens)] # DONE(Q1)
+            next_observations = next_ob_no[i*num_data_per_ens: (i+1)*(num_data_per_ens)] # DONE(Q1)
 
             # use datapoints to update one of the dyn_models
             model = self.dyn_models[i] # DONE(Q1)

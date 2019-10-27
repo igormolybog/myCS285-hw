@@ -55,12 +55,13 @@ class MPCPolicy(BasePolicy):
 
             # for each candidate action sequence, predict a sequence of
             # states for each dynamics model in your ensemble
-            for j, action_sequence in enumerate(candidate_action_sequences)
-                states_sequence = model.run_plan(obs, action_sequence, data_statistics)
+            for j, action_sequence in enumerate(candidate_action_sequences):
+                states_sequence = model.run_plan(obs, action_sequence, self.data_statistics)
 
             # once you have a sequence of predicted states from each model in your
             # ensemble, calculate the reward for each sequence using self.env.get_reward (See files in envs to see how to call this)
-                rewards, dones = self.env.get_reward([obs]+states_sequence[:-1], action_sequence)
+                rewarded_states = np.vstack([np.expand_dims(obs, axis=0), np.array(states_sequence[:-1])])
+                rewards, dones = self.env.get_reward(rewarded_states, action_sequence)
                 predicted_rewards_per_ens[i][j] = sum(rewards)
 
         # calculate mean_across_ensembles(predicted rewards).

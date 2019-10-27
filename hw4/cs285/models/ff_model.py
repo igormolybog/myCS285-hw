@@ -57,8 +57,9 @@ class FFModel(BaseModel):
         # Hint: Note that the prefix delta is used in the variable below to denote changes in state, i.e. (s'-s)
         self.delta_pred_normalized = build_mlp(input_placeholder=concatenated_input,
                                                 output_size=self.ob_dim,
-                                                self.scope, self.n_layers, self.size) # DONE(Q1) Use the build_mlp function and the concatenated_input above to define a neural network that predicts unnormalized delta states (i.e. change in state)
-        self.delta_pred_unnormalized = unnormalize(delta_pred_normalized, self.delta_mean_pl, self.delta_std_pl) # DONE(Q1) Unnormalize the the delta_pred above using the unnormalize function, and self.delta_mean_pl and self.delta_std_pl
+                                                scope=self.scope, n_layers=self.n_layers,
+                                                size=self.size) # DONE(Q1) Use the build_mlp function and the concatenated_input above to define a neural network that predicts unnormalized delta states (i.e. change in state)
+        self.delta_pred_unnormalized = unnormalize(self.delta_pred_normalized, self.delta_mean_pl, self.delta_std_pl) # DONE(Q1) Unnormalize the the delta_pred above using the unnormalize function, and self.delta_mean_pl and self.delta_std_pl
         self.next_obs_pred = obs_unnormalized + self.delta_pred_unnormalized # DONE(Q1) Predict next observation using current observation and delta prediction (not that next_obs here is unnormalized)
 
     def define_train_op(self):
@@ -83,8 +84,9 @@ class FFModel(BaseModel):
             actions = acs
         else:
             actions = acs[None]
-        feed_dict = {self.obs_pl: obs,
-                    self.acs_pl: acs,
+
+        feed_dict = {self.obs_pl: observations,
+                    self.acs_pl: actions,
                     self.obs_mean_pl: data_statistics['obs_mean'],
                     self.obs_std_pl: data_statistics['obs_std'],
                     self.acs_mean_pl: data_statistics['acs_mean'],
@@ -104,7 +106,7 @@ class FFModel(BaseModel):
                     self.acs_std_pl: data_statistics['acs_std'],
                     self.delta_mean_pl: data_statistics['delta_mean'],
                     self.delta_std_pl: data_statistics['delta_std']}
-        _, loss = self.sess.run(self.train_op, feed_dict=feed_dict) # DONE(Q1) Run the defined train_op here, and also return the loss being optimized (on this batch of data)
+        _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict) # DONE(Q1) Run the defined train_op here, and also return the loss being optimized (on this batch of data)
         return loss
 
     # SELF-IMPLEMENTED
@@ -113,5 +115,5 @@ class FFModel(BaseModel):
         planned_obs = [None]*len(planned_actions_sequence)
         for i, action in enumerate(planned_actions_sequence):
             observation = self.get_prediction(observation, action, data_statistics)
-            planned_obs[i] = observation
+            planned_obs[i] = list(observation[0])
         return planned_obs
