@@ -35,14 +35,14 @@ class Exploration(object):
             args:
                 states: (bsize, ob_dim)
 
-            TODO:
+            DONE:
                 Use self.compute_reward_bonus to compute the reward
                 bonus and then modify the rewards with the bonus
                 and store that in new_rewards, which you will return
         """
-        raise NotImplementedError
-        bonus = None
-        new_rewards = None
+        # raise NotImplementedError
+        bonus = self.compute_reward_bonus(states) # None
+        new_rewards = rewards + self.bonus_coeff*bonus # None
         return new_rewards
 
 class DiscreteExploration(Exploration):
@@ -57,7 +57,9 @@ class DiscreteExploration(Exploration):
             args:
                 states: (bsize, ob_dim)
         """
-        raise NotImplementedError
+        # raise NotImplementedError
+        for state in states:
+            self.density_model.update_count(state, 1)
 
     def bonus_function(self, count):
         """
@@ -67,7 +69,8 @@ class DiscreteExploration(Exploration):
             args:
                 count: np array (bsize)
         """
-        raise NotImplementedError
+        # raise NotImplementedError
+        return 1/np.sqrt(count)
 
     def compute_reward_bonus(self, states):
         """
@@ -77,8 +80,8 @@ class DiscreteExploration(Exploration):
             args:
                 states: (bsize, ob_dim)
         """
-        count = raise NotImplementedError
-        bonus = raise NotImplementedError
+        count = self.density_model.get_count(states) # raise NotImplementedError
+        bonus = self.bonus_function(count) # raise NotImplementedError
         return bonus
 
 
@@ -99,19 +102,20 @@ class ContinuousExploration(Exploration):
             args:
                 prob: np array (bsize,)
         """
-        raise NotImplementedError
+        # raise NotImplementedError
+        return -np.log(prob)
 
     def compute_reward_bonus(self, states):
         """
             ### PROBLEM 2
             ### YOUR CODE HERE
-        
+
             args:
                 states: (bsize, ob_dim)
         """
-        raise NotImplementedError
-        prob = None
-        bonus = None
+        # raise NotImplementedError
+        prob = self.density_model.get_prob(states) # None
+        bonus = self.bonus_function(prob) # None
         return bonus
 
 
@@ -132,7 +136,7 @@ class ExemplarExploration(ContinuousExploration):
     def __init__(self, density_model, bonus_coeff, train_iters, bsize, replay_size):
         super(ExemplarExploration, self).__init__(density_model, bonus_coeff, replay_size)
         self.train_iters = train_iters
-        self.bsize = bsize   
+        self.bsize = bsize
 
     def sample_idxs(self, states, batch_size):
         states = copy.deepcopy(states)
