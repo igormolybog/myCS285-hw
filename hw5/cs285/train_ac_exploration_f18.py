@@ -550,7 +550,7 @@ def train_AC(
             ### PROBLEM 1
             ### YOUR CODE HERE
             # raise NotImplementedError
-            re_n = exploration.modify_reward(re_n)
+            re_n = exploration.modify_reward(re_n, ob_no)
 
             print('average state', np.mean(ob_no, axis=0))
             print('average action', np.mean(ac_na, axis=0))
@@ -700,4 +700,6 @@ def main():
 
 
 if __name__ == "__main__":
+    from ex_utils import tf_debug
+    tf_debug()
     main()

@@ -45,7 +45,7 @@ class Histogram(Density_Model):
         result = [None]*len(states)
         for i, state in enumerate(states):
             bin_name = self.preprocessor(state)
-            counts[i] = function(bin_name)
+            result[i] = function(bin_name)
         return np.array(result)
 
     def _get_count(self, bin_name):
@@ -178,7 +178,7 @@ class RBF(Density_Model):
             assert euc_dists.shape == (b, B)
 
             # Gaussian
-            gaussians = raise NotImplementedError
+            # gaussians = raise NotImplementedError
             gaussians = np.exp(-euc_dists/(2*self.sigma**2))
             assert gaussians.shape == (b, B)
 
@@ -227,12 +227,12 @@ class Exemplar(Density_Model):
         self.discrim_target = tf.placeholder(shape=[None, 1], name="discrim_target", dtype=tf.float32)
 
         # raise NotImplementedError
-        self.log_likelihood = self.squeeze(self.discriminator.prob.log_prob(self.discrim_target), axis=1)
+        self.log_likelihood = tf.squeeze(self.discriminator.log_prob(self.discrim_target), axis=1)
         # tf.math.log(get_likelihood(self.state1, self.state2)) # None
-        self.likelihood = self.squeeze(self.discriminator.prob(self.discrim_target), axis=1)
+        self.likelihood = tf.squeeze(self.discriminator.prob(self.discrim_target), axis=1)
         # get_likelihood(self.state1, self.state2) # None
-        self.kl = self.kl_weight*(tfp.distributions.kl_divergence(encoder1, self.prior, name='KL_divergence1') +
-                    tfp.distributions.kl_divergence(encoder2, self.prior, name='KL_divergence2'))# None
+        self.kl = self.kl_weight*(tfp.distributions.kl_divergence(self.encoder1, self.prior, name='KL_divergence1') +
+                    tfp.distributions.kl_divergence(self.encoder2, self.prior, name='KL_divergence2'))# None
         assert len(self.log_likelihood.shape) == len(self.likelihood.shape) == len(self.kl.shape) == 1
 
         # raise NotImplementedError
@@ -266,7 +266,7 @@ class Exemplar(Density_Model):
             Hint: use build_mlp
         """
         z_mean = build_mlp(state, z_size, scope, n_layers, hid_size) # raise NotImplementedError
-        z_logstd = tf.Variable(initial_value=np.zeros(z_size), trainable=True, name='z_logstd') # raise NotImplementedError
+        z_logstd = tf.Variable(initial_value=tf.zeros(z_size), trainable=True, name='z_logstd') # raise NotImplementedError
         return tfp.distributions.MultivariateNormalDiag(loc=z_mean, scale_diag=tf.exp(z_logstd))
 
     def make_prior(self, z_size):
@@ -345,7 +345,7 @@ class Exemplar(Density_Model):
         # Sampled Latent
         z1 = encoder1.sample(name='sample_z1') # raise NotImplementedError
         z2 = encoder2.sample(name='sample_z2') # raise NotImplementedError
-        z = tf.concat([z1, z2], 0) # raise NotImplementedError
+        z = tf.concat([z1, z2], 1) # raise NotImplementedError
 
         # Discriminator
         discriminator = make_discriminator(z, 1, 'discriminator', n_layers=2, hid_size=self.hid_dim)
@@ -370,10 +370,11 @@ class Exemplar(Density_Model):
         assert state1.ndim == state2.ndim == target.ndim
         assert state1.shape[1] == state2.shape[1] == self.ob_dim
         assert state1.shape[0] == state2.shape[0] == target.shape[0]
-        ll, kl, elbo, _ = self.sess.run(self.log_likelihood, self.kl, self.elbo, self.update_op,
-                                        feed_dict={self.state1 = state1,
-                                                    self.state2 = state2,
-                                                    self.discrim_target = target})  #raise NotImplementedError
+
+        ll, kl, elbo, _ = self.sess.run([self.log_likelihood, self.kl, self.elbo, self.update_op],
+                                        feed_dict={self.state1 : state1,
+                                                    self.state2 : state2,
+                                                    self.discrim_target : target})  #raise NotImplementedError
         return ll, kl, elbo
 
     def get_likelihood(self, state1, state2):
@@ -395,9 +396,9 @@ class Exemplar(Density_Model):
         assert state1.shape[1] == state2.shape[1] == self.ob_dim
         assert state1.shape[0] == state2.shape[0]
         # raise NotImplementedError
-        likelihood = self.sess.run(self.likelihood, feed_dict={self.state1 = state1,
-                                                                self.state2 = state2,
-                                                                self.discrim_target = tf.ones((state1.shape[0]),)})
+        likelihood = self.sess.run(self.likelihood, feed_dict={self.state1 : state1,
+                                                                self.state2 : state2,
+                                                                self.discrim_target : np.ones((state1.shape[0],1))})
         return likelihood
 
     def get_prob(self, state):
@@ -415,7 +416,7 @@ class Exemplar(Density_Model):
                     compute the probability density of x from the discriminator
                     likelihood (see homework doc)
         """
-        likelihood = get_likelihood(state, state) # raise NotImplementedError
+        likelihood = self.get_likelihood(state, state) # raise NotImplementedError
         # avoid divide by 0 and log(0)
         likelihood = np.clip(np.squeeze(likelihood), 1e-5, 1-1e-5)
         prob = (1-likelihood)/likelihood # raise NotImplementedError

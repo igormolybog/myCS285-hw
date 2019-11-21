@@ -147,7 +147,9 @@ cs285.egg-info/
 */prob[123456789]*
 */submit
 *.zip
-*.txt
+*/pm_debug
+
+*.gif
 *.png
 *.dat
 
